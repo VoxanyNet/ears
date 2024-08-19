@@ -152,7 +152,8 @@ impl diff::Diff for Music {
     }
 
     fn identity() -> Self {
-        Music::new("thiswontwork.mp3").unwrap()
+        // just need to have a default value, these values dont mean anything
+        Music { source_path: None, al_source: 0, al_buffers: [0, 0], file: None, file_infos: SndInfo { frames: 0, samplerate: 0, channels: 0, format: 0, sections: 0, seekable: 0 }, sample_to_read: 0, sample_format: 0, sound_tags: Tags { title: String::new(), copyright: String::new(), software: String::new(), artist: String::new(), comment: String::new(), date: String::new(), album: String::new(), license: String::new(), track_number: String::new(), genre: String::new() }, cursor: Arc::default(), state: State::Initial, is_looping: false, looping_sender: None, offset_sender: None, thread_handle: None}
     }
 }
 
