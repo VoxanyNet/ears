@@ -123,6 +123,7 @@ impl PartialEq for Music {
     }
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct MusicDiff {
     source_path: Option<String>
 }
