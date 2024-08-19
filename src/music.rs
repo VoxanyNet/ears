@@ -110,14 +110,48 @@ pub struct Music {
 }
 
 impl Clone for Music {
+    // make this use match statements
     fn clone(&self) -> Self {
         Self::new(self.source_path.clone().unwrap().as_str()).unwrap()
     }
 }
 
 impl PartialEq for Music {
+    // make this use match statements
     fn eq(&self, other: &Self) -> bool {
         other.source_path.as_ref().unwrap() == self.source_path.as_ref().unwrap()
+    }
+}
+
+pub struct MusicDiff {
+    source_path: Option<String>
+}
+
+impl diff::Diff for Music {
+    // make this use match statements
+    type Repr = MusicDiff;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+
+        let mut diff = MusicDiff {
+            source_path: None,
+        };
+        
+        if other.source_path.as_ref().unwrap() != self.source_path.as_ref().unwrap() {
+            diff.source_path = Some(other.source_path.clone().unwrap());
+        }
+
+        diff
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        if let Some(source_path) = &diff.source_path {
+            self.source_path = Some(source_path.clone())
+        }
+    }
+
+    fn identity() -> Self {
+        Music::new("thiswontwork.mp3").unwrap()
     }
 }
 

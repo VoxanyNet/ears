@@ -27,6 +27,7 @@ use std::time::Duration;
 
 use audio_controller::AudioController;
 use audio_tags::{AudioTags, Tags};
+extern crate diff;
 use error::SoundError;
 use internal::OpenAlData;
 use openal::{al, ffi};
@@ -98,6 +99,7 @@ impl <'de> serde::Deserialize<'de> for Sound {
 
     }
 }
+
 
 // impl serde::Serialize for Sound {
 //     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>

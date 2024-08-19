@@ -19,6 +19,7 @@ crate-type = ["dylib", "rlib"]
 libc = "0.2"
 lazy_static = "1"
 serde = { version = "1.0.205", features = ["derive"] }
+diff-struct = "0.5.3"
 
 [build-dependencies]
 pkg-config = "0.3"
