@@ -75,6 +75,7 @@ const BUFFER_COUNT: i32 = 2;
 // we need to serialize place in song, pause state and file name
 // potentially we need to make it so that you can force the song to skip to a location
 // diff needs to track pause state
+
 pub struct Music {
     /// The original source file for this sound
     source_path: Option<String>,
@@ -107,6 +108,19 @@ pub struct Music {
     /// Thread which streams the music file
     thread_handle: Option<thread::JoinHandle<()>>,
 }
+
+impl Clone for Music {
+    fn clone(&self) -> Self {
+        Self::new(self.source_path.clone().unwrap().as_str()).unwrap()
+    }
+}
+
+impl PartialEq for Music {
+    fn eq(&self, other: &Self) -> bool {
+        other.source_path.as_ref().unwrap() == self.source_path.as_ref().unwrap()
+    }
+}
+
 
 impl serde::Serialize for Music {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
