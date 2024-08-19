@@ -91,6 +91,7 @@ impl SoundData {
     pub fn new(path: &str) -> Result<SoundData, SoundError> {
         check_openal_context!(Err(SoundError::InvalidOpenALContext));
 
+        // create a "handler"(?) to interface with the sound data on disk
         let mut file = match SndFile::new(path, Read) {
             Ok(file) => file,
             Err(err) => {
@@ -98,14 +99,22 @@ impl SoundData {
             }
         };
 
+        // get data about the sound, like the number of samples
         let infos = file.get_sndinfo();
 
+        // pretty sure this means the number of samples
         let nb_sample = infos.channels as i64 * infos.frames;
 
+        // allocate array large enough to store all sound samples
         let mut samples = vec![0i16; nb_sample as usize];
-        file.read_i16(&mut samples[..], nb_sample as i64);
 
+        // use the sound handler to load data from disk into array
+        file.read_i16(&mut samples[..], nb_sample as i64);
+        
+        // buffer id used to identify where we are going to store the sample array
         let mut buffer_id = 0;
+
+        // get byte size of samples array
         let len = mem::size_of::<i16>() * (samples.len());
 
         // Retrieve format informations
@@ -116,7 +125,10 @@ impl SoundData {
             }
         };
 
+        // reserve a buffer for the samples
         al::alGenBuffers(1, &mut buffer_id);
+
+        // transfer samples to newly allocted buffer
         al::alBufferData(
             buffer_id,
             format,
@@ -135,6 +147,8 @@ impl SoundData {
             nb_sample: nb_sample,
             al_buffer: buffer_id,
         };
+
+        // we no longer need the handle to data on the disk
         file.close();
 
         Ok(sound_data)

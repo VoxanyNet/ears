@@ -31,10 +31,13 @@ use error::SoundError;
 use internal::OpenAlData;
 use openal::{al, ffi};
 use reverb_effect::ReverbEffect;
+extern crate serde;
 use sound_data; //::*;//{SoundData};
 use sound_data::SoundData;
 use states::State;
 use states::State::{Initial, Paused, Playing, Stopped};
+
+
 
 /**
  * Play Sounds easily.
@@ -63,12 +66,57 @@ use states::State::{Initial, Paused, Playing, Stopped};
  * ```
  */
 pub struct Sound {
+
+    /// The original source file for this sound
+    source_path: Option<String>,
+
     /// The internal OpenAl source identifier
     al_source: u32,
+
     /// The SoundData associated to the Sound.
     sound_data: Rc<RefCell<SoundData>>,
 }
 
+impl serde::Serialize for Sound {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer {
+        
+        self.source_path.serialize(serializer)
+    }
+}
+impl <'de> serde::Deserialize<'de> for Sound {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de> {
+
+        let path = String::deserialize(deserializer)?;
+
+        let sound = Sound::new(path.as_str()).unwrap();
+            
+        Ok(sound)
+
+    }
+}
+
+// impl serde::Serialize for Sound {
+//     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+//     where
+//         S: serde::Serializer {
+//         let mut state = serializer.serialize_struct("Sound", 2)?;
+
+//         let source_path = match self.source_path {
+//             Some(source_path) => source_path,
+//             None => {
+//                 return Err(serde::ser::Error::custom("Missing source path"))
+//             },
+//         };
+
+//         serde::ser::SerializeStruct::serialize_field(&mut state, "source_path", &source_path);
+//         //serde::ser::SerializeStruct::serialize_field(&mut state, "al_source")
+        
+//     }
+// }
 impl Sound {
     /**
      * Default constructor for Sound struct.
@@ -95,7 +143,15 @@ impl Sound {
 
         let sound_data = SoundData::new(path)?;
         let sound_data = Rc::new(RefCell::new(sound_data));
-        Sound::new_with_data(sound_data)
+        
+        // attach source path
+        match Sound::new_with_data(sound_data) {
+            Ok(mut sound) => {
+                sound.source_path = Some(path.to_string());
+                Ok(sound)
+            },
+            Err(error) => Err(error),
+        }
     }
 
     /**
@@ -140,6 +196,7 @@ impl Sound {
         };
 
         Ok(Sound {
+            source_path: None,
             al_source: source_id,
             sound_data: sound_data,
         })

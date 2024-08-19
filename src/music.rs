@@ -71,7 +71,13 @@ const BUFFER_COUNT: i32 = 2;
  * }
  * ```
  */
+
+// we need to serialize place in song, pause state and file name
+// potentially we need to make it so that you can force the song to skip to a location
+// diff needs to track pause state
 pub struct Music {
+    /// The original source file for this sound
+    source_path: Option<String>,
     /// The internal OpenAL source identifier
     al_source: u32,
     /// The internal OpenAL buffers
@@ -101,6 +107,32 @@ pub struct Music {
     /// Thread which streams the music file
     thread_handle: Option<thread::JoinHandle<()>>,
 }
+
+impl serde::Serialize for Music {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer {
+        
+        self.source_path.serialize(serializer)
+    }
+}
+impl <'de> serde::Deserialize<'de> for Music {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: serde::Deserializer<'de> {
+
+        let path = String::deserialize(deserializer)?;
+
+        let mut music = Music::new(path.as_str()).unwrap();
+
+        music.play();
+            
+        Ok(music)
+
+    }
+}
+
+
 
 // Recursively fill a buffer with data, returning the frame offset into
 // the file when done. This can potentially read the file many times over
@@ -196,6 +228,10 @@ fn set_cursor_from_offset(info: &SndInfo, cursor: Arc<AtomicI64>, offset: f32) {
 }
 
 impl Music {
+
+    pub fn get_file(&self) -> &Option<Box<SndFile>> {
+        &self.file
+    }
     /**
      * Create a new Music
      *
@@ -243,6 +279,7 @@ impl Music {
         let sound_tags = get_sound_tags(&*file);
 
         Ok(Music {
+            source_path: Some(path.to_string()),
             al_source: source_id,
             al_buffers: buffer_ids,
             file: Some(file),
