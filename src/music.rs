@@ -112,7 +112,23 @@ pub struct Music {
 impl Clone for Music {
     // make this use match statements
     fn clone(&self) -> Self {
-        Self::new(self.source_path.clone().as_str()).unwrap()
+        Self {
+            source_path: self.source_path.clone(),
+            al_source: self.al_source,
+            al_buffers: self.al_buffers,
+            file: self.file.clone(),
+            file_infos:  self.file_infos.clone(),
+            sample_to_read: self.sample_to_read,
+            sample_format: self.sample_format,
+            sound_tags: self.sound_tags.clone(),
+            cursor: self.cursor.clone(),
+            state: self.state.clone(),
+            is_looping: self.is_looping,
+            looping_sender: self.looping_sender.clone(),
+            offset_sender: self.offset_sender.clone(),
+            thread_handle: None, // this cant be cloned
+        }
+        
     }
 }
 
