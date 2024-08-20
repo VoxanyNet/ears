@@ -105,7 +105,7 @@ impl Clone for Sound {
     fn clone(&self) -> Self {
         // this is cursed but i dont want to actually clone the sound data, i just want to compare the sourc epaths
         Self {
-            al_source: self.al_source,
+            al_source: 999999999,
             sound_data: Rc::new(RefCell::new(
                 SoundData {
                     source_path: self.sound_data.borrow().source_path.clone(),
