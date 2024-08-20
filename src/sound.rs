@@ -94,7 +94,9 @@ impl <'de> serde::Deserialize<'de> for Sound {
 
         let path = String::deserialize(deserializer)?;
 
-        let sound = Sound::new(path.as_str()).unwrap();
+        let mut sound = Sound::new(path.as_str()).unwrap();
+
+        sound.play();
             
         Ok(sound)
 
