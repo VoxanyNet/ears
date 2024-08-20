@@ -78,7 +78,7 @@ const BUFFER_COUNT: i32 = 2;
 
 pub struct Music {
     /// The original source file for this sound
-    source_path: Option<String>,
+    source_path: String,
     /// The internal OpenAL source identifier
     al_source: u32,
     /// The internal OpenAL buffers
@@ -112,14 +112,14 @@ pub struct Music {
 impl Clone for Music {
     // make this use match statements
     fn clone(&self) -> Self {
-        Self::new(self.source_path.clone().unwrap().as_str()).unwrap()
+        Self::new(self.source_path.clone().as_str()).unwrap()
     }
 }
 
 impl PartialEq for Music {
     // make this use match statements
     fn eq(&self, other: &Self) -> bool {
-        other.source_path.as_ref().unwrap() == self.source_path.as_ref().unwrap()
+        other.source_path == self.source_path
     }
 }
 
@@ -138,8 +138,9 @@ impl diff::Diff for Music {
             source_path: None,
         };
         
-        if other.source_path.as_ref().unwrap() != self.source_path.as_ref().unwrap() {
-            diff.source_path = Some(other.source_path.clone().unwrap());
+
+        if other.source_path != self.source_path {
+            diff.source_path = Some(other.source_path.clone());
         }
 
         diff
@@ -147,13 +148,13 @@ impl diff::Diff for Music {
 
     fn apply(&mut self, diff: &Self::Repr) {
         if let Some(source_path) = &diff.source_path {
-            self.source_path = Some(source_path.clone())
+            self.source_path = source_path.clone()
         }
     }
 
     fn identity() -> Self {
         // just need to have a default value, these values dont mean anything
-        Music { source_path: None, al_source: 0, al_buffers: [0, 0], file: None, file_infos: SndInfo { frames: 0, samplerate: 0, channels: 0, format: 0, sections: 0, seekable: 0 }, sample_to_read: 0, sample_format: 0, sound_tags: Tags { title: String::new(), copyright: String::new(), software: String::new(), artist: String::new(), comment: String::new(), date: String::new(), album: String::new(), license: String::new(), track_number: String::new(), genre: String::new() }, cursor: Arc::default(), state: State::Initial, is_looping: false, looping_sender: None, offset_sender: None, thread_handle: None}
+        Music { source_path: String::new(), al_source: 0, al_buffers: [0, 0], file: None, file_infos: SndInfo { frames: 0, samplerate: 0, channels: 0, format: 0, sections: 0, seekable: 0 }, sample_to_read: 0, sample_format: 0, sound_tags: Tags { title: String::new(), copyright: String::new(), software: String::new(), artist: String::new(), comment: String::new(), date: String::new(), album: String::new(), license: String::new(), track_number: String::new(), genre: String::new() }, cursor: Arc::default(), state: State::Initial, is_looping: false, looping_sender: None, offset_sender: None, thread_handle: None}
     }
 }
 
@@ -329,7 +330,7 @@ impl Music {
         let sound_tags = get_sound_tags(&*file);
 
         Ok(Music {
-            source_path: Some(path.to_string()),
+            source_path: path.to_string(),
             al_source: source_id,
             al_buffers: buffer_ids,
             file: Some(file),
