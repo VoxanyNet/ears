@@ -34,6 +34,7 @@ use internal::OpenAlData;
 use openal::{al, ffi};
 use reverb_effect::ReverbEffect;
 extern crate serde;
+use serde::{Deserialize, Serialize};
 use sound_data; //::*;//{SoundData};
 use sound_data::SoundData;
 use states::State;
@@ -116,6 +117,7 @@ impl PartialEq for Sound {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct SoundDiff {
     source_path: Option<String>
 }
