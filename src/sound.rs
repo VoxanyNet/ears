@@ -21,7 +21,8 @@
 
 //! Play Sounds easily.
 
-use std::cell::RefCell;
+use std::cell::{Ref, RefCell};
+use std::default;
 use std::rc::Rc;
 use std::time::Duration;
 
@@ -37,6 +38,8 @@ use sound_data; //::*;//{SoundData};
 use sound_data::SoundData;
 use states::State;
 use states::State::{Initial, Paused, Playing, Stopped};
+
+use crate::sndfile::SndInfo;
 
 
 
@@ -67,10 +70,7 @@ use states::State::{Initial, Paused, Playing, Stopped};
  * ```
  */
 pub struct Sound {
-
-    /// The original source file for this sound
-    source_path: Option<String>,
-
+    
     /// The internal OpenAl source identifier
     al_source: u32,
 
@@ -83,7 +83,8 @@ impl serde::Serialize for Sound {
         where
             S: serde::Serializer {
         
-        self.source_path.serialize(serializer)
+        // not really serializing, just storing the path where the data was sourced from
+        self.sound_data.borrow().source_path.serialize(serializer)
     }
 }
 impl <'de> serde::Deserialize<'de> for Sound {
@@ -97,6 +98,69 @@ impl <'de> serde::Deserialize<'de> for Sound {
             
         Ok(sound)
 
+    }
+}
+
+impl Clone for Sound {
+    fn clone(&self) -> Self {
+        Self {
+            al_source: self.al_source,
+            sound_data: self.sound_data.clone(),
+        }
+    }
+}
+
+impl PartialEq for Sound {
+    fn eq(&self, other: &Self) -> bool {
+        self.sound_data.borrow().source_path == other.sound_data.borrow().source_path
+    }
+}
+
+pub struct SoundDiff {
+    source_path: Option<String>
+}
+
+impl diff::Diff for Sound {
+    type Repr = SoundDiff;
+
+    fn diff(&self, other: &Self) -> Self::Repr {
+        let mut diff = SoundDiff {
+            source_path: None,
+        };
+
+        if other.sound_data.borrow().source_path != self.sound_data.borrow().source_path {
+            diff.source_path = Some(other.sound_data.borrow().source_path.clone());
+        }
+
+        diff
+    }
+
+    fn apply(&mut self, diff: &Self::Repr) {
+        if let Some(source_path) = &diff.source_path {
+            *self = Self::new(&source_path.to_string()).unwrap()
+        }
+    }
+
+    fn identity() -> Self {
+        Self {
+            al_source: 0,
+            sound_data: Rc::new(RefCell::new(
+                SoundData {
+                    source_path: "example".to_string(),
+                    sound_tags: Tags::default(),
+                    snd_info: SndInfo {
+                        frames: 0,
+                        samplerate: 0,
+                        channels: 0,
+                        format: 0,
+                        sections: 0,
+                        seekable: 0,
+                    },
+                    nb_sample: 0,
+                    al_buffer: 0,
+                }
+            )),
+        }
     }
 }
 
@@ -146,14 +210,7 @@ impl Sound {
         let sound_data = SoundData::new(path)?;
         let sound_data = Rc::new(RefCell::new(sound_data));
         
-        // attach source path
-        match Sound::new_with_data(sound_data) {
-            Ok(mut sound) => {
-                sound.source_path = Some(path.to_string());
-                Ok(sound)
-            },
-            Err(error) => Err(error),
-        }
+        Sound::new_with_data(sound_data)
     }
 
     /**
@@ -198,7 +255,6 @@ impl Sound {
         };
 
         Ok(Sound {
-            source_path: None,
             al_source: source_id,
             sound_data: sound_data,
         })

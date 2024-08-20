@@ -63,14 +63,17 @@ use sndfile::{SndFile, SndInfo};
  * ```
  */
 pub struct SoundData {
+
+    /// The original source file for this sound
+    pub source_path: String,
     /// The SoundTags who contains all the information of the sound
-    sound_tags: Tags,
+    pub sound_tags: Tags,
     /// The sndfile samples information
-    snd_info: SndInfo,
+    pub snd_info: SndInfo,
     /// The total samples count of the Sound
-    nb_sample: i64,
+    pub nb_sample: i64,
     /// The OpenAl internal identifier for the buffer
-    al_buffer: u32,
+    pub al_buffer: u32,
 }
 
 impl SoundData {
@@ -142,6 +145,7 @@ impl SoundData {
         };
 
         let sound_data = SoundData {
+            source_path: path.to_string(),
             sound_tags: get_sound_tags(&file),
             snd_info: infos,
             nb_sample: nb_sample,
