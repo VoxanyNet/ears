@@ -103,9 +103,25 @@ impl <'de> serde::Deserialize<'de> for Sound {
 
 impl Clone for Sound {
     fn clone(&self) -> Self {
+        // this is cursed but i dont want to actually clone the sound data, i just want to compare the sourc epaths
         Self {
             al_source: self.al_source,
-            sound_data: self.sound_data.clone(),
+            sound_data: Rc::new(RefCell::new(
+                SoundData {
+                    source_path: self.sound_data.borrow().source_path.clone(),
+                    sound_tags: Tags::default(),
+                    snd_info: SndInfo {
+                        frames: 0,
+                        samplerate: 0,
+                        channels: 0,
+                        format: 0,
+                        sections: 0,
+                        seekable: 0,
+                    },
+                    nb_sample: 0,
+                    al_buffer: 0,
+                }
+            )),
         }
     }
 }
